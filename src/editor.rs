@@ -13,6 +13,7 @@ use crate::utils::RawMode;
 pub enum EditorMode {
     Normal,
     SplashScreen,
+    DeleteConfirmation,
 }
 
 pub struct Editor {
@@ -85,6 +86,38 @@ impl Editor {
                 }
             }
         }
+        Ok(())
+    }
+
+    pub fn add_key(&mut self, c: char) -> io::Result<()> {
+        log::info!("Key Pressed: {}", c);
+
+        if self.mode == EditorMode::SplashScreen {
+            return Ok(())
+        }
+
+        if self.mode == EditorMode::DeleteConfirmation {
+            if c == 'y' {
+                log::info!("Deleting customer");
+                if self.scroll_buffer.get_selected_customer().is_some() {
+                    log::info!("Found a valid selected customer");
+                    self.scroll_buffer.delete_customer()?;
+                    self.set_mode(EditorMode::Normal)?;
+                    self.filter()?;
+                }
+            } else if c == 'n' {
+                log::info!("Not deleting customer");
+                self.set_mode(EditorMode::Normal)?;
+                self.filter()?;
+            }
+        }
+        Ok(())
+    }
+
+    pub fn filter(&mut self) -> io::Result<()> {
+        self.scroll_buffer.set_filter(self.line_buffer.get_string())?;
+        self.status_line.set_results_count(self.scroll_buffer.get_results_count())?;
+
         Ok(())
     }
 

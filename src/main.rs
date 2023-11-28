@@ -12,6 +12,7 @@ mod color_scheme;
 mod line_buffer;
 mod scroll_buffer;
 mod status_line;
+mod customer;
 
 
 fn main() {
