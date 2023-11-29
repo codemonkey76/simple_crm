@@ -66,6 +66,9 @@ impl Editor {
         if self.no_splash {
             self.set_mode(EditorMode::Normal)?;
         }
+
+        self.line_buffer.draw()?;
+
         Ok(())
     }
 

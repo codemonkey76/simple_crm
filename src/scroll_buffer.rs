@@ -15,7 +15,7 @@ pub struct ScrollBuffer {
 impl ScrollBuffer {
     pub fn new(color_scheme: ColorScheme) -> Result<Self, std::io::Error> {
         let size = size()?;
-        let (cols, rows) = size.0 as usize, size.1 as usize - 2);
+        let (cols, rows) = (size.0 as usize, size.1 as usize - 2);
 
         Ok(ScrollBuffer {
             buffer: Vec::new(),
