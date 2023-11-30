@@ -48,7 +48,7 @@ impl Editor {
             no_splash,
             sample_data,
             _raw_mode,
-            mode: EditorMode::SplashScreen,
+            mode: EditorMode::Normal,
         })
     }
 
@@ -67,7 +67,22 @@ impl Editor {
             self.set_mode(EditorMode::Normal)?;
         }
 
+        self.draw()?;
+
+        Ok(())
+    }
+
+    pub fn draw(&self) -> io::Result<()> {
         self.line_buffer.draw()?;
+        self.scroll_buffer.draw()?;
+        self.status_line.draw()?;
+        Ok(())
+    }
+
+    pub fn resize(&mut self) -> io::Result<()> {
+        self.status_line.resize()?;
+        self.scroll_buffer.resize()?;
+        self.line_buffer.resize()?;
 
         Ok(())
     }
@@ -75,17 +90,25 @@ impl Editor {
     pub fn run(&mut self) -> io::Result<()> {
         loop {
             if poll(std::time::Duration::from_millis(500))? {
-                if let Event::Key(event) = read()? {
-                    match event.code {
-                        KeyCode::Char('q') if event.modifiers.contains(KeyModifiers::CONTROL) => {
-                            log::info!("Exiting editor loop, received CTRL+Q");
-                            break;
+                match read()? {
+                    Event::Key(event) => {
+                        match event.code {
+                            KeyCode::Char('q') if event.modifiers.contains(KeyModifiers::CONTROL) => {
+                                log::info!("Exiting editor loop, received CTRL+Q");
+                                break;
+                            }
+                            KeyCode::Char(c) => {
+                                self.add_key(c)?;
+                                log::info!("Received key: {:?}", c);
+                            }
+                            _ => {}
                         }
-                        KeyCode::Char(c) => {
-                            log::info!("Received key: {:?}", c);
-                        }
-                        _ => {}
                     }
+                    Event::Resize(width, height) => {
+                        self.resize()?;
+                        log::info!("Window resized to {}x{}", width, height);
+                    }
+                    _ => {}
                 }
             }
         }
@@ -113,6 +136,13 @@ impl Editor {
                 self.set_mode(EditorMode::Normal)?;
                 self.filter()?;
             }
+            return Ok(())
+        }
+
+        self.line_buffer.add_key(c)?;
+
+        if self.mode == EditorMode::Normal {
+            self.filter()?;
         }
         Ok(())
     }

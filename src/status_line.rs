@@ -35,6 +35,18 @@ impl StatusLine {
         Ok(())
     }
 
+    pub fn resize(&mut self) -> io::Result<()> {
+       let size = size()?;
+        let (cols, rows) = (size.0 as usize, size.1 as usize - 1);
+
+        self.rows = rows;
+        self.cols = cols;
+
+        self.draw()?;
+
+        Ok(())
+    }
+
     pub fn draw(&self) -> io::Result<()> {
         let results_string = format!("Results: {}", self.results);
         let results_offset = results_string.len();
